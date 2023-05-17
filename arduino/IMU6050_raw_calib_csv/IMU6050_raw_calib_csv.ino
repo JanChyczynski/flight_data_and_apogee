@@ -37,9 +37,9 @@ volatile float mz_sample[3];
 
 //calibration parameter:
 //1.00         -2.00         -13.00
-static float mx_centre = 1;
-static float my_centre = -2;
-static float mz_centre = -13;
+static float mx_centre = 0;
+static float my_centre = 0;
+static float mz_centre = 0;
 
 volatile int mx_max = 0;
 volatile int my_max = 0;
