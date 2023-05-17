@@ -243,4 +243,5 @@ yaw = (X_yaw_save(1,:)*pi/180)'; %Transformation to radian
 time = time+1;                      %ToDo
 
 saveVar = [[0; time] posX posY posZ [pitch(1,1); pitch] [yaw(1,1); yaw] [roll(1,1); roll]];
-save('saveVar.mat','saveVar','-mat')
+%Call function to plot the measured / calculated trajectory
+plotTrajectory(saveVar);
