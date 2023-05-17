@@ -1,6 +1,7 @@
 close all
 clear all
 clc
+addpath('Final')
 
 g = 9.81;
 DataSet = csvread("..\Data\data_calib_2.csv");

@@ -26,16 +26,48 @@ function [] =  plotTrajectory(data)
     
  
     %Min, max for borders plot
-    xmin = min(data_short(:,1)) - 10;
-    xmax = max(data_short(:,1)) + 10;
     
-    ymin = min(data_short(:,2)) - 10;
-    ymax = max(data_short(:,2)) + 10;
+    xmin = min(data_short(:,1));
+    xmax = max(data_short(:,1));
+
+    if xmin <0
+        xmin = xmin*1.1;
+    else
+        xmin = xmin*0.9;
+    end
+    if xmax >0
+        xmax = xmax*1.1;
+    else
+        xmax = xmax*0.9;
+    end
     
-    zmin = min(data_short(:,3)) - 10;
-    zmax = max(data_short(:,3)) + 10;
+    ymin = min(data_short(:,2))*1.1;
+    ymax = max(data_short(:,2))*1.1;
+    if ymin <0
+        ymin = ymin*1.1;
+    else
+        ymin = ymin*0.9;
+    end
+    if ymax >0
+        ymax = ymax*1.1;
+    else
+        ymax = ymax*0.9;
+    end
     
-    max_scale = (max([xmax-xmin ymax-ymin zmax-zmin])) / 20;
+    zmin = min(data_short(:,3)*1.1);
+    zmax = max(data_short(:,3))*1.1;
+    if zmin <0
+        zmin = zmin*1.1;
+    else
+        zmin = zmin*0.9;
+    end
+    if zmax >0
+        zmax = zmax*1.1;
+    else
+        zmax = zmax*0.9;
+    end
+
+    max_scale = (max([xmax-xmin ymax-ymin zmax-zmin])) / 40;
     
     
     % create an object
