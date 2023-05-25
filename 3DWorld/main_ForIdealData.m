@@ -7,11 +7,12 @@ addpath('Quaternions');
 g = 9.81;
 
 %Has to be changed according to dataset
-DataSet = csvread("..\Data\spiralStairs_GaitTracking.csv");
-startTime = 4; 
-stopTime = 47; 
+DataSet = load('..\Data\data.mat');%csvread("..\Data\spiralStairs_GaitTracking.csv");
+DataSet = DataSet.data;
+startTime = 0; %4
+stopTime = 8; %47
 
-samplePeriod = 1/256;
+samplePeriod = 1/100;
 
 
 %extract data from DataSet
@@ -53,62 +54,62 @@ P = 0;
 %% Correction
 
 % #############################
-%Acc correction
-% Compute accelerometer magnitude
-acc_mag = sqrt(accX.*accX + accY.*accY + accZ.*accZ);
-
-% HP filter accelerometer data
-filtCutOff = 0.001;
-[b, a] = butter(1, (2*filtCutOff)/(1/samplePeriod), 'high');
-acc_magFilt = filtfilt(b, a, acc_mag);
-
-% Compute absolute value
-acc_magFilt = abs(acc_magFilt);
-
-% LP filter accelerometer data
-filtCutOff = 5;
-[b, a] = butter(1, (2*filtCutOff)/(1/samplePeriod), 'low');
-acc_magFilt = filtfilt(b, a, acc_magFilt);
-
-stationary = acc_magFilt < 0.05; %0.05
-
+% %Acc correction
+% % Compute accelerometer magnitude
+% acc_mag = sqrt(accX.*accX + accY.*accY + accZ.*accZ);
+% 
+% % HP filter accelerometer data
+% filtCutOff = 0.001;
+% [b, a] = butter(1, (2*filtCutOff)/(1/samplePeriod), 'high');
+% acc_magFilt = filtfilt(b, a, acc_mag);
+% 
+% % Compute absolute value
+% acc_magFilt = abs(acc_magFilt);
+% 
+% % LP filter accelerometer data
+% filtCutOff = 5;
+% [b, a] = butter(1, (2*filtCutOff)/(1/samplePeriod), 'low');
+% acc_magFilt = filtfilt(b, a, acc_magFilt);
+% 
+% stationary = acc_magFilt < 0; %0.05
+% 
 % ####################
 % -------------------------------------------------------------------------
 % Compute orientation
-
-quat = zeros(length(time), 4);
-AHRSalgorithm = AHRS('SamplePeriod', samplePeriod, 'Kp', 1, 'KpInit', 1);
-
-% Initial convergence
-initPeriod = 2;
-indexSel = 1 : find(sign(time-(time(1)+initPeriod))+1, 1);
-for i = 1:2000
-    AHRSalgorithm.UpdateIMU([0 0 0], [mean(accX(indexSel)) mean(accY(indexSel)) mean(accZ(indexSel))]);
-end
-
-% For all data
-for t = 1:length(time)
-    if(stationary(t))
-        AHRSalgorithm.Kp = 0.5;
-    else
-        AHRSalgorithm.Kp = 0;
-    end
-    
-    AHRSalgorithm.UpdateIMU(deg2rad([gyrX(t) gyrY(t) gyrZ(t)]), [accX(t) accY(t) accZ(t)]);
-    quat(t,:) = AHRSalgorithm.Quaternion;
-end
-
+% 
+% quat = zeros(length(time), 4);
+% AHRSalgorithm = AHRS('SamplePeriod', samplePeriod, 'Kp', 1, 'KpInit', 1);
+% 
+% % Initial convergence
+% initPeriod = 2;
+% indexSel = 1 : find(sign(time-(time(1)+initPeriod))+1, 1);
+% for i = 1:2000
+%     AHRSalgorithm.UpdateIMU([0 0 0], [mean(accX(indexSel)) mean(accY(indexSel)) mean(accZ(indexSel))]);
+% end
+% 
+% % For all data
+% for t = 1:length(time)
+% %     if(stationary(t))
+% %         AHRSalgorithm.Kp = 0.5;
+% %     else
+% %         AHRSalgorithm.Kp = 0;
+% %     end
+%     AHRSalgorithm.Kp = 0; % TODO
+%     AHRSalgorithm.UpdateIMU(deg2rad([gyrX(t) gyrY(t) gyrZ(t)]), [accX(t) accY(t) accZ(t)]);
+%     quat(t,:) = AHRSalgorithm.Quaternion;
+% end
+% 
 % -------------------------------------------------------------------------
 % Compute translational accelerations
-
+%
 % Rotate body accelerations to Earth frame
-acc = quaternRotate([accX accY accZ], quaternConj(quat));
+% acc = quaternRotate([accX accY accZ], quaternConj(quat));
 
 % ##################
-acc = acc * g;
-accX = acc(:,1);
-accY = acc(:,2);
-accZ = acc(:,3)-g;
+% acc = acc * g;
+% accX = acc(:,1);
+% accY = acc(:,2);
+% accZ = acc(:,3)-g;
 % ##########################################
 
 % %Acc correction
@@ -283,117 +284,101 @@ legend('Psi_d_o_t');
 
 %% Calculating position
 
+for i=1:size(accX,1)
+    acc_transf = inv(rotationMatrix3D(X_yaw_save(1,i)*pi/180,X_theta_save(1,i),X_phi_save(1,i)))*[accX(i,1); accY(i,1); accZ(i,1)];
+    accX(i,1) = acc_transf(1,1);
+    accY(i,1) = acc_transf(2,1);
+    accZ(i,1) = acc_transf(3,1);
+end
+
+
 %Numerical integration of accX [g]
-% velX = zeros(size(accX,1)+1,1);
-% velX(1,1) = 0;
-% for i=2:size(accX,1)
-%     if i==2
-%         velX(i,1) = accX(i-1,1)*g*(time(i-1,1)-0);
-%     else
-%         velX(i,1) = velX(i-1,1) + accX(i-1,1)*g*(time(i-1,1)-time(i-2,1));
-%     end
-% end
-% 
-% posX = zeros(size(accX,1)+1,1);
-% posX(1,1) = 0;
-% for i=2:size(accX,1)
-%     if i==2
-%         posX(i,1) = velX(i,1)*(time(i-1,1)-0);
-%     else
-%         posX(i,1) = posX(i-1,1) + velX(i,1)*(time(i-1,1)-time(i-2,1));
-%     end
-% end
-% 
-% % %Numerical integration of accY [g]
-% velY = zeros(size(accY,1)+1,1);
-% velY(1,1) = 0;
-% for i=2:size(accY,1)
-%     if i==2
-%         velY(i,1) = accY(i-1,1)*g*(time(i-1,1)-0);
-%     else
-%         velY(i,1) = velY(i-1,1) + accY(i-1,1)*g*(time(i-1,1)-time(i-2,1));
-%     end
-% end
-% 
-% posY = zeros(size(accY,1)+1,1);
-% posY(1,1) = 0;
-% for i=2:size(accY,1)
-%     if i==2
-%         posY(i,1) = velY(i,1)*(time(i-1,1)-0);
-%     else
-%         posY(i,1) = posY(i-1,1) + velY(i,1)*(time(i-1,1)-time(i-2,1));
-%     end
-% end
-% 
-% %Numerical integration of accZ [g]
-% velZ = zeros(size(accZ,1)+1,1);
-% velZ(1,1) = 0;
-% for i=2:size(accZ,1)
-%     if i==2
-%         velZ(i,1) = accZ(i-1,1)*g*(time(i-1,1)-0);
-%     else
-%         velZ(i,1) = velZ(i-1,1) + accZ(i-1,1)*g*(time(i-1,1)-time(i-2,1));
-%     end
-% end
-% 
-% posZ = zeros(size(accZ,1)+1,1);
-% posZ(1,1) = 0;
-% for i=2:size(accZ,1)
-%     if i==2
-%         posZ(i,1) = velZ(i,1)*(time(i-1,1)-0);
-%     else
-%         posZ(i,1) = posZ(i-1,1) + velZ(i,1)*(time(i-1,1)-time(i-2,1));
-%     end
-% end
+velX = zeros(size(accX,1),1);
+velX(1,1) = 50*cos(pi/4);   %initial speed
+for i=2:size(accX,1)
+    velX(i,1) = velX(i-1,1) + ((accX(i,1)-accX(i-1,1))/2+accX(i-1,1))*samplePeriod;
+end
+
+posX = zeros(size(accX,1),1);
+posX(1,1) = 0;
+for i=2:size(accX,1)
+    posX(i,1) = posX(i-1,1) + ((velX(i,1)-velX(i-1,1))/2+velX(i-1,1))*samplePeriod;
+end
+
+% %Numerical integration of accY [g]
+velY = zeros(size(accY,1),1);
+velY(1,1) = 0;
+for i=2:size(accY,1)
+    velY(i,1) = velY(i-1,1) + ((accY(i,1)-accY(i-1,1))/2+accY(i-1,1))*samplePeriod;
+end
+
+posY = zeros(size(accY,1),1);
+posY(1,1) = 0;
+for i=2:size(accY,1)
+    posY(i,1) = posY(i-1,1) + ((velY(i,1)-velY(i-1,1))/2+velY(i-1,1))*samplePeriod;
+end
+
+%Numerical integration of accZ [g]
+velZ = zeros(size(accZ,1),1);
+velZ(1,1) = 50*sin(pi/4);  %initial speed
+for i=2:size(accZ,1)
+    velZ(i,1) = velZ(i-1,1) + ((accZ(i,1)-accZ(i-1,1))/2+accZ(i-1,1))*samplePeriod;
+end
+
+posZ = zeros(size(accZ,1),1);
+posZ(1,1) = 0;
+for i=2:size(accZ,1)
+    posZ(i,1) = posZ(i-1,1) + ((velZ(i,1)-velZ(i-1,1))/2+velZ(i-1,1))*samplePeriod;
+end
 
 
-accX_filt = accX;
-accY_filt = accY;
-accZ_filt = accZ;
+% accX_filt = accX;
+% accY_filt = accY;
+% accZ_filt = accZ;
 
 % ###############
-cut_off = 0.05; %0.05
-for i=1:length(accX_filt)    %Find stationary parts
-    if acc_magFilt(i,1) >= -cut_off && acc_magFilt(i,1) <= cut_off
-        accX_filt(i,1) = 0;
-        accY_filt(i,1) = 0;
-        accZ_filt(i,1) = 0;
-    end
-end
+% cut_off = 0; %0.05
+% for i=1:length(accX_filt)    %Find stationary parts
+%     if acc_magFilt(i,1) >= -cut_off && acc_magFilt(i,1) <= cut_off
+%         accX_filt(i,1) = 0;
+%         accY_filt(i,1) = 0;
+%         accZ_filt(i,1) = 0;
+%     end
+% end
 % ################
 
-%Integration of acc
-velX = cumtrapz(samplePeriod,accX_filt); 
-velY = cumtrapz(samplePeriod,accY_filt);
-velZ = cumtrapz(samplePeriod,accZ_filt); 
+% %Integration of acc
+% velX = cumtrapz(samplePeriod,accX_filt)+50*cos(pi/4); %TODO
+% velY = cumtrapz(samplePeriod,accY_filt);
+% velZ = cumtrapz(samplePeriod,accZ_filt)+50*sin(pi/4); %TODO
 
 
 % #######################
-vel = [velX velY velZ];
-
-% Compute integral drift during non-stationary periods
-velDrift = zeros(size(vel));
-stationaryStart = find([0; diff(stationary)] == -1);
-stationaryEnd = find([0; diff(stationary)] == 1);
-for i = 1:numel(stationaryEnd)
-    driftRate = vel(stationaryEnd(i)-1, :) / (stationaryEnd(i) - stationaryStart(i));
-    enum = 1:(stationaryEnd(i) - stationaryStart(i));
-    drift = [enum'*driftRate(1) enum'*driftRate(2) enum'*driftRate(3)];
-    velDrift(stationaryStart(i):stationaryEnd(i)-1, :) = drift;
-end
-
-% Remove integral drift
-vel = vel - velDrift;
-
-velX = vel(:,1);
-velY = vel(:,2);
-velZ = vel(:,3);
+% vel = [velX velY velZ];
+% 
+% % Compute integral drift during non-stationary periods
+% velDrift = zeros(size(vel));
+% stationaryStart = find([0; diff(stationary)] == -1);
+% stationaryEnd = find([0; diff(stationary)] == 1);
+% for i = 1:numel(stationaryEnd)
+%     driftRate = vel(stationaryEnd(i)-1, :) / (stationaryEnd(i) - stationaryStart(i));
+%     enum = 1:(stationaryEnd(i) - stationaryStart(i));
+%     drift = [enum'*driftRate(1) enum'*driftRate(2) enum'*driftRate(3)];
+%     velDrift(stationaryStart(i):stationaryEnd(i)-1, :) = drift;
+% end
+% 
+% % Remove integral drift
+% vel = vel - velDrift;
+% 
+% velX = vel(:,1);
+% velY = vel(:,2);
+% velZ = vel(:,3);
 % #############################
 
-%Integration of velocity
-posX = cumtrapz(samplePeriod,velX);
-posY = cumtrapz(samplePeriod,velY);
-posZ = cumtrapz(samplePeriod,velZ);
+% %Integration of velocity
+% posX = cumtrapz(samplePeriod,velX);
+% posY = cumtrapz(samplePeriod,velY);
+% posZ = cumtrapz(samplePeriod,velZ);
 
 
 
@@ -406,6 +391,9 @@ posZ = cumtrapz(samplePeriod,velZ);
 figure('Name','Position 3D')
 plot3(posX,posY,posZ)
 legend('XYZ')
+xlabel('x')
+ylabel('y')
+zlabel('z')
 
 %Plot X, Y, Z separately over time
 figure('Name','Position')
@@ -432,13 +420,13 @@ hold off;
 legend('X','Y','Z')
 
 %% Save X, Y, Z, roll, pitch, yaw
-roll = (X_phi_save(1,:))';
+roll = (X_phi_save(1,:))'; 
 pitch = (X_theta_save(1,:))';
 yaw = (X_yaw_save(1,:)*pi/180)'; %Transformation to radian
 
 %time = time+1;                      %ToDo
 
-saveVar = [time posX posY posZ pitch yaw roll];
+%saveVar = [time posX posY posZ pitch yaw roll];
 %Call function to plot the measured / calculated trajectory
 %plotTrajectory(saveVar);
 
