@@ -22,9 +22,9 @@ gyrZ = DataSet(:,4);
 accX = DataSet(:,5);    %g
 accY = DataSet(:,6);
 accZ = DataSet(:,7);
-magX = DataSet(:,8).*1000;    %Gauß = e-4 T
-magY = DataSet(:,9).*1000;
-magZ = DataSet(:,10).*1000;
+magX = DataSet(:,8);%.*1000;    %Gauß = e-4 T %TODO
+magY = DataSet(:,9);%.*1000;
+magZ = DataSet(:,10);%.*1000;
 
 %Cut off a bit of start and ending period
 time = 0:samplePeriod:time(end,1);
@@ -295,15 +295,15 @@ accX_filt = accX;
 accY_filt = accY;
 accZ_filt = accZ;     
 
-% ###############           
-for i=1:length(accX_filt)    %Find stationary parts
-    if stationary(i) == 1
-        accX_filt(i,1) = 0;
-        accY_filt(i,1) = 0;
-        accZ_filt(i,1) = 0;
-    end
-end
-% ################
+% % ###############           
+% for i=1:length(accX_filt)    %Find stationary parts
+%     if stationary(i) == 1
+%         accX_filt(i,1) = 0;
+%         accY_filt(i,1) = 0;
+%         accZ_filt(i,1) = 0;
+%     end
+% end
+% % ################
 
 %rotating acc vector to earth frame
 for i=1:size(accX,1)
@@ -315,11 +315,43 @@ end
 
 accZ_filt = accZ_filt-g;    %TODO: Correction by g, because foot can not fall down like a rocket 
 
-%Integration of acc
-velX = cumtrapz(samplePeriod,accX_filt); 
-velY = cumtrapz(samplePeriod,accY_filt);
-velZ = cumtrapz(samplePeriod,accZ_filt); 
+% %Integration of acc
+% velX = cumtrapz(samplePeriod,accX_filt); 
+% velY = cumtrapz(samplePeriod,accY_filt);
+% velZ = cumtrapz(samplePeriod,accZ_filt); 
 
+%Numerical integration of accX [g]
+velX = zeros(size(accX,1),1);
+velX(1,1) = 0;   %initial speed
+for i=2:size(accX,1)
+    if (stationary(i) == 1)
+        velX(i,1) = 0;
+    else
+        velX(i,1) = velX(i-1,1) + ((accX(i,1)-accX(i-1,1))/2+accX(i-1,1))*samplePeriod;
+    end
+end
+
+% %Numerical integration of accY [g]
+velY = zeros(size(accY,1),1);
+velY(1,1) = 0;
+for i=2:size(accY,1)
+    if (stationary(i) == 1)
+        velY(i,1) = 0;
+    else
+        velY(i,1) = velY(i-1,1) + ((accY(i,1)-accY(i-1,1))/2+accY(i-1,1))*samplePeriod;
+    end
+end
+
+%Numerical integration of accZ [g]
+velZ = zeros(size(accZ,1),1);
+velZ(1,1) = 0;  %initial speed
+for i=2:size(accZ,1)
+    if (stationary(i) == 1)
+        velZ(i,1) = 0;
+    else
+        velZ(i,1) = velZ(i-1,1) + ((accZ(i,1)-accZ(i-1,1))/2+accZ(i-1,1))*samplePeriod;
+    end
+end
 
 % #######################
 vel = [velX velY velZ];
@@ -343,10 +375,29 @@ velY = vel(:,2);
 velZ = vel(:,3);
 % #############################
 
-%Integration of velocity
-posX = cumtrapz(samplePeriod,velX);
-posY = cumtrapz(samplePeriod,velY);
-posZ = cumtrapz(samplePeriod,velZ);
+% %Integration of velocity
+% posX = cumtrapz(samplePeriod,velX);
+% posY = cumtrapz(samplePeriod,velY);
+% posZ = cumtrapz(samplePeriod,velZ);
+
+posX = zeros(size(accX,1),1);
+posX(1,1) = 0;
+for i=2:size(accX,1)
+    posX(i,1) = posX(i-1,1) + ((velX(i,1)-velX(i-1,1))/2+velX(i-1,1))*samplePeriod;
+end
+
+posY = zeros(size(accY,1),1);
+posY(1,1) = 0;
+for i=2:size(accY,1)
+    posY(i,1) = posY(i-1,1) + ((velY(i,1)-velY(i-1,1))/2+velY(i-1,1))*samplePeriod;
+end
+
+posZ = zeros(size(accZ,1),1);
+posZ(1,1) = 0;
+for i=2:size(accZ,1)
+    posZ(i,1) = posZ(i-1,1) + ((velZ(i,1)-velZ(i-1,1))/2+velZ(i-1,1))*samplePeriod;
+end
+
 
 
 
