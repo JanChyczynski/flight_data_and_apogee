@@ -1,10 +1,20 @@
 #include "Wire.h"
+#include <SPI.h>
+#include <Adafruit_BMP280.h>
 
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
+#include "apogeum_finder.h"
 #include "I2Cdev.h"
 #include "MPU6050.h"
 #include "imu_apogee_finder.h"
+
+#define BMP_SCK  (13)
+#define BMP_MISO (12)
+#define BMP_MOSI (11)
+#define BMP_CS   (10)
+Adafruit_BMP280 bmp; // I2C
+Apogeum_finder apogee_finder;
 
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
@@ -73,7 +83,19 @@ void setup() {
 
 
   Serial.println("Nr,Gx(degress/s),Gy(degress/s),Gz(degress/s),Ax(g),Ay(g),Az(g),Mx,My,Mz");
+
+  if (!bmp.begin()) {
+    Serial.println(F("Could not find a valid BMP280 sensor, check wiring!"));
+    while (1);
+  }
+  /* Default settings from datasheet. */
+  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
+                  Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                  Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                  Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                  Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
 }
+
 int i = 0;
 void loop() {
 
@@ -105,6 +127,20 @@ void loop() {
 
   imu_apogee_finder.insert_accelerations(Axyz);
   Serial.println("imu apogee detected:  "+ imu_apogee_finder.get_reached_apogee());
+
+  Serial.print(F("Temperature = "));
+  Serial.print(bmp.readTemperature());
+  Serial.println(" *C");
+  Serial.print(F("Pressure = "));
+  Serial.print(bmp.readPressure());
+  Serial.println(" Pa");
+  Serial.print(F("Approx altitude = "));
+  double alt = bmp.readAltitude(1013.25); /* Adjusted to local forecast! */
+  Serial.print(alt);
+  Serial.println(" m");
+  apogee_finder.insertAltitude(alt);
+  Serial.print("height apogee detected: "+apogee_finder.get_reached_apogeum());
+  Serial.println();
   
   delay(256);
 }
