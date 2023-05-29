@@ -86,7 +86,7 @@ void setup() {
 
   if (!bmp.begin()) {
     Serial.println(F("Could not find a valid BMP280 sensor, check wiring!"));
-    while (1);
+    //while (1);
   }
   /* Default settings from datasheet. */
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
@@ -126,7 +126,8 @@ void loop() {
   Serial.println(Mxyz[2]);
 
   imu_apogee_finder.insert_accelerations(Axyz);
-  Serial.println("imu apogee detected:  "+ imu_apogee_finder.get_reached_apogee());
+  Serial.print(" imu apogee detected:  ");
+  Serial.println(imu_apogee_finder.get_reached_apogee());
 
   Serial.print(F("Temperature = "));
   Serial.print(bmp.readTemperature());
@@ -139,8 +140,9 @@ void loop() {
   Serial.print(alt);
   Serial.println(" m");
   apogee_finder.insertAltitude(alt);
-  Serial.print("height apogee detected: "+apogee_finder.get_reached_apogeum());
+  Serial.print("height apogee detected: ");
+  Serial.println(apogee_finder.get_reached_apogeum());
   Serial.println();
   
-  delay(256);
+  delay(25);
 }
