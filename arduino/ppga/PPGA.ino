@@ -123,7 +123,7 @@ void setup() {
 
   initialiseSdCard();
 
-  Serial.println("Nr,Gx(degress/s),Gy(degress/s),Gz(degress/s),Ax(g),Ay(g),Az(g),Mx,My,Mz,Imu_apogee,T(*C),Pressure(Pa),alt(m),height_apogee");
+  myFile.println("Nr,Gx(degress/s),Gy(degress/s),Gz(degress/s),Ax(g),Ay(g),Az(g),Mx,My,Mz,Imu_apogee,T(*C),Pressure(Pa),alt(m),height_apogee");
 }
 
 int i = 0;
