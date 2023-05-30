@@ -97,8 +97,10 @@ void setup() {
   Wire.begin();
   accelgyro.initialize();
   servo.attach(6);
+  servo.write(0);
 
   // verify connection
+  delay(1000);
   SER_OUT Serial.println(F("Testing device connections..."));
   SER_OUT Serial.println(accelgyro.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
 
@@ -106,7 +108,6 @@ void setup() {
     idicate_setup_failure();
   }
 
-  delay(1000);
   SER_OUT Serial.println("     ");
 
 //  Mxyz_init_calibrated();
@@ -178,23 +179,20 @@ void loop() {
 
   if(height_apogee_finder.get_reached_apogeum()) {
     servo.write(150);
-    delay(1500);   
-    servo.write(0);
-    delay(1500);   
   }
 
-  // SER_OUT Serial.print("imu a: ");
-  // SER_OUT Serial.print(Axyz[0]);
-  // SER_OUT Serial.print(F(","));
-  // SER_OUT Serial.print(Axyz[1]);
-  // SER_OUT Serial.print(F(","));
-  // SER_OUT Serial.println(Axyz[2]);
-  // SER_OUT Serial.print(F("imu_apogee: "));
-  // SER_OUT Serial.println(imu_apogee_finder.get_reached_apogee());
-  SER_OUT Serial.print(F("bmp: "));
-  SER_OUT Serial.println(alt);
-  SER_OUT Serial.print(F("height_apogee: "));
-  SER_OUT Serial.println(height_apogee_finder.get_reached_apogeum());
+  SER_OUT Serial.print("imu a: ");
+  SER_OUT Serial.print(Axyz[0]);
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(Axyz[1]);
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.println(Axyz[2]);
+  SER_OUT Serial.print(F("imu_apogee: "));
+  SER_OUT Serial.println(imu_apogee_finder.get_reached_apogee());
+  // SER_OUT Serial.print(F("bmp: "));
+  // SER_OUT Serial.println(alt);
+  // SER_OUT Serial.print(F("height_apogee: "));
+  // SER_OUT Serial.println(height_apogee_finder.get_reached_apogeum());
 
   if ((loopCounter)%3 == 1){
     myFile.flush();
