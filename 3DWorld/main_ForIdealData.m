@@ -7,13 +7,15 @@ addpath('Quaternions');
 g = 9.81;
 
 %Has to be changed according to dataset
-DataSet = load('..\Data\data.mat');%csvread("..\Data\spiralStairs_GaitTracking.csv");
+% DataSet = load('..\Data\data.mat');%csvread("..\Data\spiralStairs_GaitTracking.csv");
+DataSet = load('..\Data\data_withLateralDrift.mat');
 DataSet = DataSet.data;
 startTime = 0; %4
 stopTime = 8; %47
 
 samplePeriod = 1/100;
 
+%% Import data
 
 %extract data from DataSet
 time = DataSet(:,1);
@@ -23,9 +25,9 @@ gyrZ = DataSet(:,4);
 accX = DataSet(:,5);    %g
 accY = DataSet(:,6);
 accZ = DataSet(:,7);
-magX = DataSet(:,8).*1000;    %Gauß = e-4 T
-magY = DataSet(:,9).*1000;
-magZ = DataSet(:,10).*1000;
+magX = DataSet(:,8);    %Gauß = e-4 T
+magY = DataSet(:,9);
+magZ = DataSet(:,10);
 
 %Cut off a bit of start and ending period
 time = 0:samplePeriod:time(end,1);
@@ -40,6 +42,21 @@ accZ = accZ(indexSel, :);
 magX = magX(indexSel, :);
 magY = magY(indexSel, :);
 magZ = magZ(indexSel, :);
+
+%% Adding random noise to values
+
+snr = 10;
+
+accX = awgn(accX,snr,'measured');
+accY = awgn(accY,snr,'measured');
+accZ = awgn(accZ,snr,'measured');
+
+gyrX = awgn(gyrX,snr,'measured');
+gyrY = awgn(gyrY,snr,'measured');
+gyrZ = awgn(gyrZ,snr,'measured');
+
+
+%% Kalman filter parameters
 
 T_s = 0.04;
 A = [1 -T_s;
@@ -137,13 +154,13 @@ P = 0;
 %Needed for mag correction
 mag_0_Yaw = atan2(-magY(:),magX(:))*180/pi;
 mag_0_Yaw_Mean = mean(mag_0_Yaw);
-mag_Signal = -1;
+mag_Signal = -1;            %TODO
 
 %Mag correction
 yaw_mag_cor(1,1)= 0;
 for i=1:size(magX,1)
     %Yaw = atan2(-ay,ax);
-    yaw_mag(i,1) = atan2(magY(i),magX(i))*180/pi;   %Transformation to degrees
+    yaw_mag(i,1) = atan2(-magY(i),magX(i))*180/pi;   %Transformation to degrees
     
     if i==1
         yaw_mag_cor(1,1) = yaw_mag(i,1)-mag_0_Yaw_Mean;
@@ -171,8 +188,8 @@ Y_theta_save = zeros(1,size(gyrY,1));
 P_theta_save = zeros(2,size(gyrY,1)*2);
 
 R_pitch = 1;
-Q_pitch = [80 0;
-           0 80]; %1200; starting with identity and then trial and error to find the best values for the diagonal matrix
+Q_pitch = [0.001 0;
+           0 0.001]; %80; starting with identity and then trial and error to find the best values for the diagonal matrix
 
 for i=1:size(gyrY,1)
     y = atan(-accX(i)/sqrt(accY(i)^2+accZ(i)^2));
@@ -181,8 +198,8 @@ for i=1:size(gyrY,1)
     if i==1
         X0 = [0; 
               0];
-        P0 = [10 0; 
-              0 10];
+        P0 = [5 0; 
+              0 5];
         [X, P] = KalmanFilter(A, B, C, u, y, X0, P0, Q_pitch, R_pitch);
     else
         
@@ -206,8 +223,8 @@ X_phi_save = zeros(2,size(gyrX,1));
 Y_phi_save = zeros(1,size(gyrX,1));
 P_phi_save = zeros(2,size(gyrX,1)*2);
 R_roll = 1;
-Q_roll = [35 0;
-           0 35]; %1; starting with identity and then trial and error to find the best values for the diagonal matrix
+Q_roll = [0.01 0;
+           0 0.01]; %35; starting with identity and then trial and error to find the best values for the diagonal matrix
 
 for i=1:size(gyrX,1)
     y = atan(accY(i)/accZ(i));
@@ -216,8 +233,8 @@ for i=1:size(gyrX,1)
     if i==1
         X0 = [0; 
               0];
-        P0 = [10 0; 
-              0 10];
+        P0 = [5 0; 
+              0 5]; %1
         [X, P] = KalmanFilter(A, B, C, u, y, X0, P0, Q_roll, R_roll);
     else
         
@@ -239,9 +256,9 @@ legend('Phi_m_e_a_s_u_r_e_d','Phi_e_s_t_i_m_a_t_e_d');
 X_yaw_save = zeros(2,size(gyrZ,1));
 Y_yaw_save = zeros(1,size(gyrZ,1));
 P_yaw_save = zeros(2,size(gyrZ,1)*2);
-R_yaw = 3;
-Q_yaw = [3 0;
-           0 3]; %0.5; starting with identity and then trial and error to find the best values for the diagonal matrix
+R_yaw = 1;
+Q_yaw = [1 0;
+           0 1]; %0.5; starting with identity and then trial and error to find the best values for the diagonal matrix
 
 
 for i=1:size(magX,1)
@@ -252,8 +269,8 @@ for i=1:size(magX,1)
     if i==1
         X0 = [0; 
               0];
-        P0 = [50 0; 
-              0 50];
+        P0 = [1 0; 
+              0 1]; %50
         [X, P] = KalmanFilter(A, B, C, u, y, X0, P0, Q_yaw, R_yaw);
     else
         
@@ -291,6 +308,9 @@ for i=1:size(accX,1)
     accZ(i,1) = acc_transf(3,1);
 end
 
+%Delete after testing
+accY = DataSet(:,6);
+accY = accY(indexSel, :);
 
 %Numerical integration of accX [g]
 velX = zeros(size(accX,1),1);
@@ -426,9 +446,9 @@ yaw = (X_yaw_save(1,:)*pi/180)'; %Transformation to radian
 
 %time = time+1;                      %ToDo
 
-%saveVar = [time posX posY posZ pitch yaw roll];
-%Call function to plot the measured / calculated trajectory
-%plotTrajectory(saveVar);
+% saveVar = [time posX posY posZ pitch yaw roll];
+% %Call function to plot the measured / calculated trajectory
+% plotTrajectory(saveVar);
 
 
 

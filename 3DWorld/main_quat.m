@@ -10,12 +10,12 @@ g = 9.81;
 % DataSet = csvread("..\Data\spiralStairs_GaitTracking.csv"); 
 % startTime = 4; 
 % stopTime = 47;
-DataSet = csvread("..\Data\straightLine_GaitTracking.csv");
-startTime = 6;
-stopTime = 26;
-% DataSet = csvread("..\Data\stairsAndCorridor_GaitTracking.csv");
-% startTime = 5;
-% stopTime = 53;
+% DataSet = csvread("..\Data\straightLine_GaitTracking.csv");
+% startTime = 6;
+% stopTime = 26;
+DataSet = csvread("..\Data\stairsAndCorridor_GaitTracking.csv");
+startTime = 5;
+stopTime = 53;
 
 samplePeriod = 1/256;
 
@@ -149,13 +149,13 @@ accZ = acc(:,3)-g;
 %Needed for mag correction
 mag_0_Yaw = atan2(-magY(:),magX(:))*180/pi;
 mag_0_Yaw_Mean = mean(mag_0_Yaw);
-mag_Signal = -1;
+mag_Signal = -1;        %TODO
 
 %Mag correction
 yaw_mag_cor(1,1)= 0;
 for i=1:size(magX,1)
     %Yaw = atan2(-ay,ax);
-    yaw_mag(i,1) = atan2(magY(i),magX(i))*180/pi;   %Transformation to degrees
+    yaw_mag(i,1) = atan2(-magY(i),magX(i))*180/pi;   %Transformation to degrees
     
     if i==1
         yaw_mag_cor(1,1) = yaw_mag(i,1)-mag_0_Yaw_Mean;
@@ -182,9 +182,9 @@ X_theta_save = zeros(2,size(gyrY,1));
 Y_theta_save = zeros(1,size(gyrY,1));
 P_theta_save = zeros(2,size(gyrY,1)*2);
 
-R_pitch = 0.1;
+R_pitch = 1;  %0.1
 Q_pitch = [50 0;
-           0 50]; %80; starting with identity and then trial and error to find the best values for the diagonal matrix
+           0 50]; %50; starting with identity and then trial and error to find the best values for the diagonal matrix
 
 for i=1:size(gyrY,1)
     y = atan(-accX(i)/sqrt(accY(i)^2+accZ(i)^2));
