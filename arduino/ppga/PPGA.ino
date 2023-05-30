@@ -15,7 +15,7 @@
 #define BMP_MOSI (11)
 #define BMP_CS   (10)
 
-#define SER_OUT if (1)
+#define SER_OUT if (0)
 
 bool real_launch = 0;
 
@@ -64,6 +64,8 @@ volatile int my_min = 0;
 volatile int mz_min = 0;
 
 const int sdCardChipSelect = 4;
+String filename;
+
 File myFile;
 
 void setup() {
@@ -110,7 +112,7 @@ void setup() {
 
   initialiseSdCard();
 
-  myFile.println(F("Nr,Gx(degress/s),Gy(degress/s),Gz(degress/s),Ax(g),Ay(g),Az(g),Mx,My,Mz,Imu_apogee,T(*C),Pressure(Pa),alt(m),height_apogee"));
+  myFile.println(F("Nr,ms,Gx(degress/s),Gy(degress/s),Gz(degress/s),Ax(g),Ay(g),Az(g),Mx,My,Mz,Imu_apogee,T(*C),Pressure(Pa),alt(m),height_apogee"));
 }
 
 void initialiseSdCard(){
@@ -125,11 +127,14 @@ void initialiseSdCard(){
       //TODO open servo
     }
   }
-  randomSeed(analogRead(0));
-  String filename = "test"+(String)random(1<<31)+".csv";
+  int seed = analogRead(4)*1024 + analogRead(3);
+  SER_OUT Serial.print(F("setting seed to "));
+  SER_OUT Serial.println(seed);
+  randomSeed(seed);
+
+  String filename = "data"+(String)random(0,1<<14)+".csv";
   myFile = SD.open(filename, FILE_WRITE);
 
-  // if the file opened okay, write to it:
   if (myFile) {
     SER_OUT Serial.print(F("file "));
     SER_OUT Serial.print(filename);
@@ -144,37 +149,22 @@ void initialiseSdCard(){
     }
   }
 }
-
-int i = 0;
+int loopCounter = 0;
 void loop() {
-
+ 
   getAccel_Data();
-  getGyro_Data();
-  getCompassDate_calibrated(); // compass data has been calibrated here
-  getHeading();				//before we use this function we should run 'getCompassDate_calibrated()' frist, so that we can get calibrated data ,then we can get correct angle .
-  getTiltHeading();
-
+  
   imu_apogee_finder.insert_accelerations(Axyz);
   float alt = bmp.readAltitude(1013.25); /* Adjusted to local forecast! */
   height_apogee_finder.insertAltitude(alt);
 
+
   SER_OUT Serial.print("imu: ");
-  SER_OUT Serial.print(Gxyz[0]);
-  SER_OUT Serial.print(F(","));
-  SER_OUT Serial.print(Gxyz[1]);
-  SER_OUT Serial.print(F(","));
-  SER_OUT Serial.print(Gxyz[2]);
-  SER_OUT Serial.print(F(","));
   SER_OUT Serial.print(Axyz[0]);
   SER_OUT Serial.print(F(","));
   SER_OUT Serial.print(Axyz[1]);
   SER_OUT Serial.print(F(","));
   SER_OUT Serial.print(Axyz[2]);
-  SER_OUT Serial.print(F(","));
-  SER_OUT Serial.print(Mxyz[0]);
-  SER_OUT Serial.print(F(","));
-  SER_OUT Serial.print(Mxyz[1]);
-  SER_OUT Serial.print(F(","));
   SER_OUT Serial.println(Mxyz[2]);
   SER_OUT Serial.print(F("imu_apogee: "));
   SER_OUT Serial.println(imu_apogee_finder.get_reached_apogee());
@@ -187,14 +177,28 @@ void loop() {
   SER_OUT Serial.print(F("height_apogee: "));
   SER_OUT Serial.println(height_apogee_finder.get_reached_apogeum());
 
-  print_data_to_file();
+  if ((loopCounter)%3 == 1){
+    myFile.flush();
+  }
+  if ((loopCounter++)%3 == 0){
+    print_data_to_file();
+  }
   
-  delay(25);
 }
 
 
+int i = 0;
 void print_data_to_file(){
+  SER_OUT Serial.print(F("saving to SD... millis: "));
+  SER_OUT Serial.println(millis());
+  getGyro_Data();
+  getCompassDate_calibrated(); // compass data has been calibrated here
+  getHeading();				//before we use this function we should run 'getCompassDate_calibrated()' frist, so that we can get calibrated data ,then we can get correct angle .
+  getTiltHeading();
+
   myFile.print(i++);
+  myFile.print(F(","));
+  myFile.print(millis());
   myFile.print(F(","));
   myFile.print(Gxyz[0]);
   myFile.print(F(","));
@@ -223,4 +227,6 @@ void print_data_to_file(){
   myFile.print(bmp.readAltitude(1013.25));
   myFile.print(F(","));
   myFile.println(height_apogee_finder.get_reached_apogeum());
+  
+  
 }
