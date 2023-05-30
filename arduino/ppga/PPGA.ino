@@ -14,6 +14,11 @@
 #define BMP_MISO (12)
 #define BMP_MOSI (11)
 #define BMP_CS   (10)
+
+#define SER_OUT if (1)
+
+bool real_launch = 0;
+
 Adafruit_BMP280 bmp; // I2C
 Apogeum_finder height_apogee_finder;
 
@@ -67,28 +72,34 @@ void setup() {
   // initialize serial communication
   // (38400 chosen because it works as well at 8MHz as it does at 16MHz, but
   // it's really up to you depending on your project)
-  Serial.begin(38400);
+  SER_OUT Serial.begin(38400);
 
   // initialize device
-  while (!Serial);
-  Serial.println(F("Initializing I2C devices..."));
+  SER_OUT while (!Serial);
+  SER_OUT Serial.println(F("Initializing I2C devices..."));
   Wire.begin();
   accelgyro.initialize();
 
   // verify connection
-  Serial.println(F("Testing device connections..."));
-  Serial.println(accelgyro.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
+  SER_OUT Serial.println(F("Testing device connections..."));
+  SER_OUT Serial.println(accelgyro.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
+
+  if (!accelgyro.testConnection() && real_launch){
+    //TODO open servo
+  }
 
   delay(1000);
-  Serial.println("     ");
+  SER_OUT Serial.println("     ");
 
 //  Mxyz_init_calibrated();
 
 
 
   if (!bmp.begin()) {
-    Serial.println(F("Could not find a valid BMP280 sensor, check wiring!"));
-    //while (1);
+    SER_OUT Serial.println(F("Could not find a valid BMP280 sensor, check wiring!"));
+    if (real_launch){
+      //TODO open servo
+    }
   }
   /* Default settings from datasheet. */
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
@@ -103,14 +114,16 @@ void setup() {
 }
 
 void initialiseSdCard(){
-  Serial.print("Initializing SD card...");
+  SER_OUT Serial.print("Initializing SD card...");
   if (!SD.begin(sdCardChipSelect)) {
-    Serial.println(F("initialization failed. Things to check:"));
-    Serial.println(F("1. is a card inserted?"));
-    Serial.println(F("2. is your wiring correct?"));
-    Serial.println(F("3. did you change the sdCardChipSelect pin to match your shield or module?"));
-    Serial.println(F("Note: press reset button on the board and reopen this Serial Monitor after fixing your issue!"));
-    //while (true);
+    SER_OUT Serial.println(F("initialization failed. Things to check:"));
+    SER_OUT Serial.println(F("1. is a card inserted?"));
+    SER_OUT Serial.println(F("2. is your wiring correct?"));
+    SER_OUT Serial.println(F("3. did you change the sdCardChipSelect pin to match your shield or module?"));
+    SER_OUT Serial.println(F("Note: press reset button on the board and reopen this Serial Monitor after fixing your issue!"));
+    if (real_launch){
+      //TODO open servo
+    }
   }
   randomSeed(analogRead(0));
   String filename = "test"+(String)random(1<<31)+".csv";
@@ -118,14 +131,17 @@ void initialiseSdCard(){
 
   // if the file opened okay, write to it:
   if (myFile) {
-    Serial.print(F("file "));
-    Serial.print(filename);
-    Serial.println(F(" created succesfully"));
+    SER_OUT Serial.print(F("file "));
+    SER_OUT Serial.print(filename);
+    SER_OUT Serial.println(F(" created succesfully"));
   } else {
     // if the file didn't open, print an error:
-    Serial.print(F("error opening "));
-    Serial.println(filename);
-    //while(true);
+    SER_OUT Serial.print(F("error opening "));
+    SER_OUT Serial.println(filename);
+    
+    if (real_launch){
+      //TODO open servo
+    }
   }
 }
 
@@ -142,34 +158,34 @@ void loop() {
   float alt = bmp.readAltitude(1013.25); /* Adjusted to local forecast! */
   height_apogee_finder.insertAltitude(alt);
 
-  Serial.print("imu: ");
-  Serial.print(Gxyz[0]);
-  Serial.print(F(","));
-  Serial.print(Gxyz[1]);
-  Serial.print(F(","));
-  Serial.print(Gxyz[2]);
-  Serial.print(F(","));
-  Serial.print(Axyz[0]);
-  Serial.print(F(","));
-  Serial.print(Axyz[1]);
-  Serial.print(F(","));
-  Serial.print(Axyz[2]);
-  Serial.print(F(","));
-  Serial.print(Mxyz[0]);
-  Serial.print(F(","));
-  Serial.print(Mxyz[1]);
-  Serial.print(F(","));
-  Serial.println(Mxyz[2]);
-  Serial.print(F("imu_apogee: "));
-  Serial.println(imu_apogee_finder.get_reached_apogee());
-  Serial.print(F("bmp: "));
-  Serial.print(bmp.readTemperature());
-  Serial.print(F(","));
-  Serial.print(bmp.readPressure());
-  Serial.print(F(","));
-  Serial.println(alt);
-  Serial.print(F("height_apogee: "));
-  Serial.println(height_apogee_finder.get_reached_apogeum());
+  SER_OUT Serial.print("imu: ");
+  SER_OUT Serial.print(Gxyz[0]);
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(Gxyz[1]);
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(Gxyz[2]);
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(Axyz[0]);
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(Axyz[1]);
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(Axyz[2]);
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(Mxyz[0]);
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(Mxyz[1]);
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.println(Mxyz[2]);
+  SER_OUT Serial.print(F("imu_apogee: "));
+  SER_OUT Serial.println(imu_apogee_finder.get_reached_apogee());
+  SER_OUT Serial.print(F("bmp: "));
+  SER_OUT Serial.print(bmp.readTemperature());
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(bmp.readPressure());
+  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.println(alt);
+  SER_OUT Serial.print(F("height_apogee: "));
+  SER_OUT Serial.println(height_apogee_finder.get_reached_apogeum());
 
   print_data_to_file();
   
