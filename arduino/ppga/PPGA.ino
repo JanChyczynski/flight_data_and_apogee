@@ -16,7 +16,7 @@
 #define BMP_MOSI (11)
 #define BMP_CS   (10)
 
-#define SER_OUT if (0)
+#define SER_OUT if (1)
 
 bool real_launch = 0;
 
@@ -118,6 +118,7 @@ void setup() {
       idicate_setup_failure();
     }
   }
+  SER_OUT Serial.println(F("BMP280 working"));
   /* Default settings from datasheet. */
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                   Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
@@ -147,7 +148,7 @@ void initialiseSdCard(){
   SER_OUT Serial.println(seed);
   randomSeed(seed);
 
-  String filename = "data"+(String)random(0,1<<14)+".csv";
+  String filename = "d"+(String)random(0,1<<14)+".csv";
   myFile = SD.open(filename, FILE_WRITE);
 
   if (myFile) {
