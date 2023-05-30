@@ -17,7 +17,8 @@ public:
       }
     }
     if (is_within_tolerance(sum) || 
-      multiply_if_gr_neg(Axyz[IMU_GRAVITY_AXIS])<0){
+      multiply_if_gr_neg(Axyz[IMU_GRAVITY_AXIS])<0 ||
+      readings_null(Axyz)){
       current_streak++;
     }else{
       current_streak = 0;
@@ -30,15 +31,18 @@ public:
     }
   }
   bool get_reached_apogee(){
-      return reached_apogee;
+    return reached_apogee;
   }
 
 private:
   bool is_within_tolerance(imu_acc_t value){
-      return (value >= 1.0 - IMU_TOLERANCE && value <= 1.0 + IMU_TOLERANCE);
+    return (value >= 1.0 - IMU_TOLERANCE && value <= 1.0 + IMU_TOLERANCE);
   }
   imu_acc_t multiply_if_gr_neg (imu_acc_t a){
-      return IMU_IS_GRAVITY_NEGATIVE ? -a : a;
+    return IMU_IS_GRAVITY_NEGATIVE ? -a : a;
+  }
+  bool readings_null(imu_acc_t Axyz[]){
+    return Axyz[0] == 0 && Axyz[1] == 0 && Axyz[2] == 0; 
   }
 };
 
