@@ -61,33 +61,8 @@ volatile int mz_min = 0;
 const int sdCardChipSelect = 4;
 File myFile;
 
-void initialiseSdCard(){
-  Serial.print("Initializing SD card...");
-  if (!SD.begin(sdCardChipSelect)) {
-    Serial.println("initialization failed. Things to check:");
-    Serial.println("1. is a card inserted?");
-    Serial.println("2. is your wiring correct?");
-    Serial.println("3. did you change the sdCardChipSelect pin to match your shield or module?");
-    Serial.println("Note: press reset button on the board and reopen this Serial Monitor after fixing your issue!");
-    //while (true);
-  }
-  randomSeed(analogRead(0));
-  String filename = "test"+(String)random(1<<31)+".csv";
-  myFile = SD.open(filename, FILE_WRITE);
-
-  // if the file opened okay, write to it:
-  if (myFile) {
-    Serial.println("file "+filename+" created succesfully");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening "+filename);
-    //while(true);
-  }
-}
-
 void setup() {
   // join I2C bus (I2Cdev library doesn't do this automatically)
-  Wire.begin();
 
   // initialize serial communication
   // (38400 chosen because it works as well at 8MHz as it does at 16MHz, but
@@ -96,12 +71,13 @@ void setup() {
 
   // initialize device
   while (!Serial);
-  Serial.println("Initializing I2C devices...");
+  Serial.println(F("Initializing I2C devices..."));
+  Wire.begin();
   accelgyro.initialize();
 
   // verify connection
-  Serial.println("Testing device connections...");
-  Serial.println(accelgyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
+  Serial.println(F("Testing device connections..."));
+  Serial.println(accelgyro.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
 
   delay(1000);
   Serial.println("     ");
@@ -123,7 +99,34 @@ void setup() {
 
   initialiseSdCard();
 
-  myFile.println("Nr,Gx(degress/s),Gy(degress/s),Gz(degress/s),Ax(g),Ay(g),Az(g),Mx,My,Mz,Imu_apogee,T(*C),Pressure(Pa),alt(m),height_apogee");
+  myFile.println(F("Nr,Gx(degress/s),Gy(degress/s),Gz(degress/s),Ax(g),Ay(g),Az(g),Mx,My,Mz,Imu_apogee,T(*C),Pressure(Pa),alt(m),height_apogee"));
+}
+
+void initialiseSdCard(){
+  Serial.print("Initializing SD card...");
+  if (!SD.begin(sdCardChipSelect)) {
+    Serial.println(F("initialization failed. Things to check:"));
+    Serial.println(F("1. is a card inserted?"));
+    Serial.println(F("2. is your wiring correct?"));
+    Serial.println(F("3. did you change the sdCardChipSelect pin to match your shield or module?"));
+    Serial.println(F("Note: press reset button on the board and reopen this Serial Monitor after fixing your issue!"));
+    //while (true);
+  }
+  randomSeed(analogRead(0));
+  String filename = "test"+(String)random(1<<31)+".csv";
+  myFile = SD.open(filename, FILE_WRITE);
+
+  // if the file opened okay, write to it:
+  if (myFile) {
+    Serial.print(F("file "));
+    Serial.print(filename);
+    Serial.println(F(" created succesfully"));
+  } else {
+    // if the file didn't open, print an error:
+    Serial.print(F("error opening "));
+    Serial.println(filename);
+    //while(true);
+  }
 }
 
 int i = 0;
@@ -141,31 +144,31 @@ void loop() {
 
   Serial.print("imu: ");
   Serial.print(Gxyz[0]);
-  Serial.print(",");
+  Serial.print(F(","));
   Serial.print(Gxyz[1]);
-  Serial.print(",");
+  Serial.print(F(","));
   Serial.print(Gxyz[2]);
-  Serial.print(",");
+  Serial.print(F(","));
   Serial.print(Axyz[0]);
-  Serial.print(",");
+  Serial.print(F(","));
   Serial.print(Axyz[1]);
-  Serial.print(",");
+  Serial.print(F(","));
   Serial.print(Axyz[2]);
-  Serial.print(",");
+  Serial.print(F(","));
   Serial.print(Mxyz[0]);
-  Serial.print(",");
+  Serial.print(F(","));
   Serial.print(Mxyz[1]);
-  Serial.print(",");
+  Serial.print(F(","));
   Serial.println(Mxyz[2]);
-  Serial.print("imu_apogee: ");
+  Serial.print(F("imu_apogee: "));
   Serial.println(imu_apogee_finder.get_reached_apogee());
-  Serial.print("bmp: ");
+  Serial.print(F("bmp: "));
   Serial.print(bmp.readTemperature());
-  Serial.print(",");
+  Serial.print(F(","));
   Serial.print(bmp.readPressure());
-  Serial.print(",");
+  Serial.print(F(","));
   Serial.println(alt);
-  Serial.print("height_apogee: ");
+  Serial.print(F("height_apogee: "));
   Serial.println(height_apogee_finder.get_reached_apogeum());
 
   print_data_to_file();
@@ -176,32 +179,32 @@ void loop() {
 
 void print_data_to_file(){
   myFile.print(i++);
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(Gxyz[0]);
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(Gxyz[1]);
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(Gxyz[2]);
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(Axyz[0]);
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(Axyz[1]);
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(Axyz[2]);
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(Mxyz[0]);
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(Mxyz[1]);
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(Mxyz[2]);
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(imu_apogee_finder.get_reached_apogee());
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(bmp.readTemperature());
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(bmp.readPressure());
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.print(bmp.readAltitude(1013.25));
-  myFile.print(",");
+  myFile.print(F(","));
   myFile.println(height_apogee_finder.get_reached_apogeum());
 }
