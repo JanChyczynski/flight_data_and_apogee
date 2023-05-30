@@ -183,19 +183,15 @@ void loop() {
     delay(1500);   
   }
 
-  SER_OUT Serial.print("imu a: ");
-  SER_OUT Serial.print(Axyz[0]);
-  SER_OUT Serial.print(F(","));
-  SER_OUT Serial.print(Axyz[1]);
-  SER_OUT Serial.print(F(","));
-  SER_OUT Serial.println(Axyz[2]);
-  SER_OUT Serial.print(F("imu_apogee: "));
-  SER_OUT Serial.println(imu_apogee_finder.get_reached_apogee());
+  // SER_OUT Serial.print("imu a: ");
+  // SER_OUT Serial.print(Axyz[0]);
+  // SER_OUT Serial.print(F(","));
+  // SER_OUT Serial.print(Axyz[1]);
+  // SER_OUT Serial.print(F(","));
+  // SER_OUT Serial.println(Axyz[2]);
+  // SER_OUT Serial.print(F("imu_apogee: "));
+  // SER_OUT Serial.println(imu_apogee_finder.get_reached_apogee());
   SER_OUT Serial.print(F("bmp: "));
-  SER_OUT Serial.print(bmp.readTemperature());
-  SER_OUT Serial.print(F(","));
-  SER_OUT Serial.print(bmp.readPressure());
-  SER_OUT Serial.print(F(","));
   SER_OUT Serial.println(alt);
   SER_OUT Serial.print(F("height_apogee: "));
   SER_OUT Serial.println(height_apogee_finder.get_reached_apogeum());
@@ -212,8 +208,8 @@ void loop() {
 
 int i = 0;
 void print_data_to_file(){
-  SER_OUT Serial.print(F("saving to SD... millis: "));
-  SER_OUT Serial.println(millis());
+  // SER_OUT Serial.print(F("saving to SD... millis: "));
+  // SER_OUT Serial.println(millis());
   getGyro_Data();
   getCompassDate_calibrated(); // compass data has been calibrated here
   getHeading();				//before we use this function we should run 'getCompassDate_calibrated()' frist, so that we can get calibrated data ,then we can get correct angle .
