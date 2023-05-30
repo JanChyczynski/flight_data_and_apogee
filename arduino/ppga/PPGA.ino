@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include <Adafruit_BMP280.h>
 #include <SD.h>
+#include <Servo.h>
 
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
@@ -29,6 +30,8 @@ Apogeum_finder height_apogee_finder;
 MPU6050 accelgyro;
 I2Cdev   I2C_M;
 Imu_apogee_finder imu_apogee_finder;
+
+Servo servo;
 
 uint8_t buffer_m[6];
 
@@ -66,6 +69,17 @@ volatile int mz_min = 0;
 const int sdCardChipSelect = 4;
 File myFile;
 
+void idicate_setup_failure() {
+  servo.write(150);
+  delay(1000);   
+  servo.write(0);
+  delay(500);   
+  servo.write(150);
+  delay(1000);   
+  servo.write(0);
+  delay(200); 
+}
+
 void setup() {
   // join I2C bus (I2Cdev library doesn't do this automatically)
 
@@ -79,13 +93,14 @@ void setup() {
   SER_OUT Serial.println(F("Initializing I2C devices..."));
   Wire.begin();
   accelgyro.initialize();
+  servo.attach(3);
 
   // verify connection
   SER_OUT Serial.println(F("Testing device connections..."));
   SER_OUT Serial.println(accelgyro.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
 
   if (!accelgyro.testConnection() && real_launch){
-    //TODO open servo
+    idicate_setup_failure();
   }
 
   delay(1000);
@@ -98,7 +113,7 @@ void setup() {
   if (!bmp.begin()) {
     SER_OUT Serial.println(F("Could not find a valid BMP280 sensor, check wiring!"));
     if (real_launch){
-      //TODO open servo
+      idicate_setup_failure();
     }
   }
   /* Default settings from datasheet. */
@@ -122,7 +137,7 @@ void initialiseSdCard(){
     SER_OUT Serial.println(F("3. did you change the sdCardChipSelect pin to match your shield or module?"));
     SER_OUT Serial.println(F("Note: press reset button on the board and reopen this Serial Monitor after fixing your issue!"));
     if (real_launch){
-      //TODO open servo
+      idicate_setup_failure();
     }
   }
   randomSeed(analogRead(0));
@@ -140,7 +155,7 @@ void initialiseSdCard(){
     SER_OUT Serial.println(filename);
     
     if (real_launch){
-      //TODO open servo
+      idicate_setup_failure();
     }
   }
 }
@@ -158,19 +173,26 @@ void loop() {
   float alt = bmp.readAltitude(1013.25); /* Adjusted to local forecast! */
   height_apogee_finder.insertAltitude(alt);
 
-  SER_OUT Serial.print("imu: ");
+  if(height_apogee_finder.get_reached_apogeum()) {
+    servo.write(150);
+    delay(1500);   
+    servo.write(0);
+    delay(1500);   
+  }
+
+  SER_OUT Serial.print("imu gam: ");
   SER_OUT Serial.print(Gxyz[0]);
   SER_OUT Serial.print(F(","));
   SER_OUT Serial.print(Gxyz[1]);
   SER_OUT Serial.print(F(","));
   SER_OUT Serial.print(Gxyz[2]);
-  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(F(" | "));
   SER_OUT Serial.print(Axyz[0]);
   SER_OUT Serial.print(F(","));
   SER_OUT Serial.print(Axyz[1]);
   SER_OUT Serial.print(F(","));
   SER_OUT Serial.print(Axyz[2]);
-  SER_OUT Serial.print(F(","));
+  SER_OUT Serial.print(F(" | "));
   SER_OUT Serial.print(Mxyz[0]);
   SER_OUT Serial.print(F(","));
   SER_OUT Serial.print(Mxyz[1]);
