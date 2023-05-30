@@ -103,6 +103,11 @@ void setup() {
   delay(1000);
   SER_OUT Serial.println(F("Testing device connections..."));
   SER_OUT Serial.println(accelgyro.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
+  getAccel_Data();
+
+  if ((Axyz[0] == 0 && Axyz[1] == 0 && Axyz[2] == 0) && real_launch){
+    idicate_setup_failure();
+  }
 
   if (!accelgyro.testConnection() && real_launch){
     idicate_setup_failure();
