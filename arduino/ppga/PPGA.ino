@@ -96,7 +96,7 @@ void setup() {
   SER_OUT Serial.println(F("Initializing I2C devices..."));
   Wire.begin();
   accelgyro.initialize();
-  servo.attach(5);
+  servo.attach(6);
 
   // verify connection
   SER_OUT Serial.println(F("Testing device connections..."));
@@ -145,7 +145,7 @@ void initialiseSdCard(){
       idicate_setup_failure();
     }
   }
-  int seed = analogRead(4)*1024 + analogRead(3);
+  int seed = analogRead(2)*1024 + analogRead(3);
   SER_OUT Serial.print(F("setting seed to "));
   SER_OUT Serial.println(seed);
   randomSeed(seed);
