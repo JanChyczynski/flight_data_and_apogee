@@ -17,7 +17,6 @@ stopTime = 26;
 % startTime = 5;
 % stopTime = 53;
 
-
 samplePeriod = 1/256;
 
 
@@ -47,7 +46,7 @@ magX = magX(indexSel, :);
 magY = magY(indexSel, :);
 magZ = magZ(indexSel, :);
 
-T_s = 0.04;%samplePeriod;            %TODO
+T_s = samplePeriod;            %TODO
 A = [1 -T_s;
      0 1];
 B = [T_s;
@@ -81,48 +80,48 @@ stationary = acc_magFilt < 0.05; %0.05
 
 
 
-% % ####################
-% % -------------------------------------------------------------------------
-% % Compute orientation
-% 
-% quat = zeros(length(time), 4);
-% AHRSalgorithm = AHRS('SamplePeriod', samplePeriod, 'Kp', 1, 'KpInit', 1);
-% 
-% % Initial convergence
-% initPeriod = 2;
-% indexSel = 1 : find(sign(time-(time(1)+initPeriod))+1, 1);
-% for i = 1:2000
-%     AHRSalgorithm.UpdateIMU([0 0 0], [mean(accX(indexSel)) mean(accY(indexSel)) mean(accZ(indexSel))]);
-% end
-% 
-% % For all data
-% for t = 1:length(time)
-%     if(stationary(t))
-%         AHRSalgorithm.Kp = 0.5;
-%     else
-%         AHRSalgorithm.Kp = 0;
-%     end
-%     
-%     AHRSalgorithm.UpdateIMU(deg2rad([gyrX(t) gyrY(t) gyrZ(t)]), [accX(t) accY(t) accZ(t)]);
-%     quat(t,:) = AHRSalgorithm.Quaternion;
-% end
-% 
-% % -------------------------------------------------------------------------
-% % Compute translational accelerations
-% 
-% % Rotate body accelerations to Earth frame
-% acc = quaternRotate([accX accY accZ], quaternConj(quat));
+% ####################
+% -------------------------------------------------------------------------
+% Compute orientation
 
-%Transforming acc from g to m/s
-accX = accX*g;
-accY = accY*g;
-accZ = accZ*g;
+quat = zeros(length(time), 4);
+AHRSalgorithm = AHRS('SamplePeriod', samplePeriod, 'Kp', 1, 'KpInit', 1);
+
+% Initial convergence
+initPeriod = 2;
+indexSel = 1 : find(sign(time-(time(1)+initPeriod))+1, 1);
+for i = 1:2000
+    AHRSalgorithm.UpdateIMU([0 0 0], [mean(accX(indexSel)) mean(accY(indexSel)) mean(accZ(indexSel))]);
+end
+
+% For all data
+for t = 1:length(time)
+    if(stationary(t))
+        AHRSalgorithm.Kp = 0.5;
+    else
+        AHRSalgorithm.Kp = 0;
+    end
+    
+    AHRSalgorithm.UpdateIMU(deg2rad([gyrX(t) gyrY(t) gyrZ(t)]), [accX(t) accY(t) accZ(t)]);
+    quat(t,:) = AHRSalgorithm.Quaternion;
+end
+
+% -------------------------------------------------------------------------
+% Compute translational accelerations
+
+% Rotate body accelerations to Earth frame
+acc = quaternRotate([accX accY accZ], quaternConj(quat));
+
+% % Transforming acc from g to m/s
+% accX = accX*g;
+% accY = accY*g;
+% accZ = accZ*g;
 
 % ##################
-% acc = acc * g;
-% accX = acc(:,1);
-% accY = acc(:,2);
-% accZ = acc(:,3)-g;
+acc = acc * g;
+accX = acc(:,1);
+accY = acc(:,2);
+accZ = acc(:,3)-g;
 % ##########################################
 
 % %Acc correction
@@ -150,13 +149,13 @@ accZ = accZ*g;
 %Needed for mag correction
 mag_0_Yaw = atan2(-magY(:),magX(:))*180/pi;
 mag_0_Yaw_Mean = mean(mag_0_Yaw);
-mag_Signal = 1;            %TODO
+mag_Signal = -1;
 
 %Mag correction
 yaw_mag_cor(1,1)= 0;
 for i=1:size(magX,1)
     %Yaw = atan2(-ay,ax);
-    yaw_mag(i,1) = atan2(-magY(i),magX(i))*180/pi;   %TODO: Transformation to degrees
+    yaw_mag(i,1) = atan2(magY(i),magX(i))*180/pi;   %Transformation to degrees
     
     if i==1
         yaw_mag_cor(1,1) = yaw_mag(i,1)-mag_0_Yaw_Mean;
@@ -260,7 +259,7 @@ Q_yaw = [3 0;
 
 for i=1:size(magX,1)
     
-    y = yaw_mag_cor(i,1); %TODO
+    y = yaw_mag_cor(i,1);
     u = gyrZ(i);
 
     if i==1
@@ -298,9 +297,9 @@ legend('Psi_d_o_t');
 
 %% Calculating position
 
-accX_filt = accX;
-accY_filt = accY;
-accZ_filt = accZ;     
+% accX_filt = accX;
+% accY_filt = accY;
+% accZ_filt = accZ;     
 
 % % ###############           
 % for i=1:length(accX_filt)    %Find stationary parts
@@ -312,15 +311,15 @@ accZ_filt = accZ;
 % end
 % % ################
 
-%rotating acc vector to earth frame
-for i=1:size(accX,1)
-    acc_transf = inv(rotationMatrix3D(X_yaw_save(1,i)*pi/180,X_theta_save(1,i),X_phi_save(1,i)))*[accX_filt(i,1); accY_filt(i,1); accZ_filt(i,1)];
-    accX_filt(i,1) = acc_transf(1,1);
-    accY_filt(i,1) = acc_transf(2,1);
-    accZ_filt(i,1) = acc_transf(3,1);
-end
+% %rotating acc vector to earth frame
+% for i=1:size(accX,1)
+%     acc_transf = inv(rotationMatrix3D(X_yaw_save(1,i)*pi/180,X_theta_save(1,i),X_phi_save(1,i)))*[accX_filt(i,1); accY_filt(i,1); accZ_filt(i,1)];
+%     accX_filt(i,1) = acc_transf(1,1);
+%     accY_filt(i,1) = acc_transf(2,1);
+%     accZ_filt(i,1) = acc_transf(3,1);
+% end
 
-accZ_filt = accZ_filt-g;    %TODO: Correction by g, because foot can not fall down like a rocket 
+% accZ_filt = accZ_filt-g;    %TODO: Correction by g, because foot can not fall down like a rocket 
 
 % %Integration of acc
 % velX = cumtrapz(samplePeriod,accX_filt); 
@@ -334,7 +333,7 @@ for i=2:size(accX,1)
     if (stationary(i) == 1)
         velX(i,1) = 0;
     else
-        velX(i,1) = velX(i-1,1) + ((accX_filt(i,1)-accX_filt(i-1,1))/2+accX_filt(i-1,1))*samplePeriod;
+        velX(i,1) = velX(i-1,1) + ((accX(i,1)-accX(i-1,1))/2+accX(i-1,1))*samplePeriod;
     end
 end
 
@@ -345,7 +344,7 @@ for i=2:size(accY,1)
     if (stationary(i) == 1)
         velY(i,1) = 0;
     else
-        velY(i,1) = velY(i-1,1) + ((accY_filt(i,1)-accY_filt(i-1,1))/2+accY_filt(i-1,1))*samplePeriod;
+        velY(i,1) = velY(i-1,1) + ((accY(i,1)-accY(i-1,1))/2+accY(i-1,1))*samplePeriod;
     end
 end
 
@@ -356,7 +355,7 @@ for i=2:size(accZ,1)
     if (stationary(i) == 1)
         velZ(i,1) = 0;
     else
-        velZ(i,1) = velZ(i-1,1) + ((accZ_filt(i,1)-accZ_filt(i-1,1))/2+accZ_filt(i-1,1))*samplePeriod;
+        velZ(i,1) = velZ(i-1,1) + ((accZ(i,1)-accZ(i-1,1))/2+accZ(i-1,1))*samplePeriod;
     end
 end
 
