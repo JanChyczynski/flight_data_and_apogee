@@ -136,7 +136,7 @@ void loop() {
   getTiltHeading();
 
   imu_apogee_finder.insert_accelerations(Axyz);
-  double alt = bmp.readAltitude(1013.25); /* Adjusted to local forecast! */
+  float alt = bmp.readAltitude(1013.25); /* Adjusted to local forecast! */
   height_apogee_finder.insertAltitude(alt);
 
   Serial.print("imu: ");

@@ -1,7 +1,7 @@
 #ifndef PARAMS
 #define PARAMS
 
-typedef double altitude_t;
+typedef float altitude_t;
 typedef int my_time_t;
 
 const int PAST_SAMPLE_COMPARED = 5;
