@@ -88,6 +88,7 @@ void setup() {
   // initialize serial communication
   // (38400 chosen because it works as well at 8MHz as it does at 16MHz, but
   // it's really up to you depending on your project)
+  pinMode(10, OUTPUT);
   SER_OUT Serial.begin(38400);
 
   // initialize device
@@ -95,7 +96,7 @@ void setup() {
   SER_OUT Serial.println(F("Initializing I2C devices..."));
   Wire.begin();
   accelgyro.initialize();
-  servo.attach(3);
+  servo.attach(5);
 
   // verify connection
   SER_OUT Serial.println(F("Testing device connections..."));
@@ -132,6 +133,7 @@ void setup() {
 }
 
 void initialiseSdCard(){
+
   SER_OUT Serial.print("Initializing SD card...");
   if (!SD.begin(sdCardChipSelect)) {
     SER_OUT Serial.println(F("initialization failed. Things to check:"));
