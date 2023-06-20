@@ -1,5 +1,6 @@
 function [] =  plotTrajectory(data)
-    %%
+    %% 
+    % Source: http://www.wbint.pl/flypath3d/
     % PACKAGE_SETUP (package_setup.m)
     %
     % flypath3d package check & configuration file
@@ -10,18 +11,18 @@ function [] =  plotTrajectory(data)
     %    package_setup
     % 
     % --- flypath.m ---
-    filename = strcat(cd,'\flypath.m'); 
+    filename = strcat(cd,'/Final/flypath.m'); 
     if exist(filename,'file') ~= 2
        warning('file flypath.m not found!'); 
     end
     
     % --- new_object.m ---
-    filename = strcat(cd,'\new_object.m'); 
+    filename = strcat(cd,'/Final/new_object.m'); 
     if exist(filename,'file') ~= 2
        warning('file new_object.m not found!');
     end
     
-    %%
+    %% modified section
     data_short = data(:, 2:7); %data without time 
     
  
@@ -66,8 +67,9 @@ function [] =  plotTrajectory(data)
     else
         zmax = zmax*0.9;
     end
-
-    max_scale = (max([xmax-xmin ymax-ymin zmax-zmin])) / 40;
+    
+    %%
+    max_scale = (max([xmax-xmin ymax-ymin zmax-zmin])) / 60;
     
     
     % create an object

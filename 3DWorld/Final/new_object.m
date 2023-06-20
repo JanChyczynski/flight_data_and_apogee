@@ -1,4 +1,4 @@
-%
+% Source: http://www.wbint.pl/flypath3d/
 % NEW_OBJECT (new_object.m)
 %
 % Creates 3d object data set for visualization
