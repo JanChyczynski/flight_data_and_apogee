@@ -328,7 +328,11 @@ velY = vel(:,2);
 velZ = vel(:,3);
 % #############################
 
-% Numerical integration of vel to obtain pos (trapezoidal rule)
+% %Integration of velocity
+% posX = cumtrapz(samplePeriod,velX);
+% posY = cumtrapz(samplePeriod,velY);
+% posZ = cumtrapz(samplePeriod,velZ);
+
 posX = zeros(size(accX,1),1);
 posX(1,1) = 0;
 for i=2:size(accX,1)
@@ -348,7 +352,14 @@ for i=2:size(accZ,1)
 end
 
 
-%Plot position in 3D
+
+
+% %transformation to m
+% posX = posX/10; 
+% posY = posY/10;
+% posZ = posZ/100;
+
+%Plot in 3D
 figure('Name','Position 3D')
 plot3(posX,posY,posZ)
 legend('XYZ')
@@ -356,7 +367,7 @@ xlabel('x')
 ylabel('y')
 zlabel('z')
 
-%Plot X, Y, Z position separately over time
+%Plot X, Y, Z separately over time
 figure('Name','Position')
 subplot(3,1,1)
 plot(time, posX)
@@ -371,7 +382,7 @@ plot(time, posZ)
 xlabel('time [s]')
 ylabel('Z [m]')
 
-%Plot velocities over time
+%Plot velocitys over time
 figure('Name','Velocity')
 hold on;
 plot(time, velX)

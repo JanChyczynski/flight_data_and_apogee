@@ -121,7 +121,7 @@ plot(X_theta_save(1,:)*180/pi)
 ylabel('[Degrees]')
 legend('Theta_m_e_a_s_u_r_e_d','Theta_e_s_t_i_m_a_t_e_d');
 
-%% Roll angle
+%% Roll angle - Kalman filter
 X_phi_save = zeros(2,size(gyrX,1));
 Y_phi_save = zeros(1,size(gyrX,1));
 P_phi_save = zeros(2,size(gyrX,1)*2);
@@ -156,7 +156,7 @@ plot(X_phi_save(1,:)*180/pi)
 ylabel('[Degrees]')
 legend('Phi_m_e_a_s_u_r_e_d','Phi_e_s_t_i_m_a_t_e_d');
 
-%% Yaw angle
+%% Yaw angle - Kalman filter
 X_yaw_save = zeros(2,size(gyrZ,1));
 Y_yaw_save = zeros(1,size(gyrZ,1));
 P_yaw_save = zeros(2,size(gyrZ,1)*2);
@@ -293,7 +293,7 @@ plot(time, velZ)
 hold off;
 legend('X','Y','Z')
 
-%% Save X, Y, Z, roll, pitch, yaw
+%% Start Animation
 roll = (X_phi_save(1,:))'; 
 pitch = (X_theta_save(1,:))';
 pitch = pitch-pi/4;     %Correction needed for the animation

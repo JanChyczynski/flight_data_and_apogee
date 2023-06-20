@@ -423,16 +423,15 @@ plot(time, velZ)
 hold off;
 legend('X','Y','Z')
 
-%% Save X, Y, Z, roll, pitch, yaw
+%% Start Animation
 roll = (X_phi_save(1,:))'; 
 pitch = (X_theta_save(1,:))';
+pitch = pitch-pi/4;     %Correction needed for the animation
 yaw = (X_yaw_save(1,:)*pi/180)'; %Transformation to radian
 
-%time = time+1;                      %ToDo
-
-% saveVar = [time posX posY posZ pitch yaw roll];
-% %Call function to plot the measured / calculated trajectory
-% plotTrajectory(saveVar);
+saveVar = [time posX posY posZ pitch yaw roll];
+% Call function to plot the measured / calculated trajectory
+plotTrajectory(saveVar);
 
 
 
