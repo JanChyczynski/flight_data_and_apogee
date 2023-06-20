@@ -46,6 +46,7 @@ magY = magY(indexSel, :);
 magZ = magZ(indexSel, :);
 
 %% Kalman filter parameters
+
 T_s = 0.04;             %TODO
 A = [1 -T_s;
      0 1];
@@ -255,7 +256,7 @@ hold on;
 plot(X_yaw_save(1,:))
 hold off;
 ylabel('[Degrees]')
-legend('Psi_m_e_a_s_u_r_e_d','Psi_e_s_t_i_m_a_t_e_d'); %In Degrees!
+legend('Psi_m_e_a_s_u_r_e_d','Psi_e_s_t_i_m_a_t_e_d'); 
 
 %% Derivatives
 figure('Name','Derivatives Phi and Theta');

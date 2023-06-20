@@ -5,7 +5,7 @@ clear all
 clc
 addpath('Final')
 
-%% PLEASE ADJUST PARAMETERS IN THIS SECTION + Line 223 + weight matrices for Kalman filter
+%% PLEASE ADJUST PARAMETERS IN THIS SECTION + Line 221 + weight matrices, P, T_s for Kalman filter
 %Import data; has to be changed according to dataset
 % DataSet = load('..\Data\data.mat');                   %Parabolic fligth
 DataSet = load('..\Data\data_withLateralDrift.mat');    %parabolic fligth with lateral drift (data fpor accY is already in earth frame; it was not calculated correctly by the professor. Therefore, the angles calculated with accY are not 100% correct)
@@ -206,7 +206,7 @@ plot(X_yaw_save(2,:))
 legend('Psi_d_o_t');
 ylabel('[Degrees/s]')
 
-%% Calculating position
+%% Convert to earth frame
 
 %Rotating acc vector from body to earth frame using angles calculated /
 %estimated by Kalman filter
@@ -220,6 +220,8 @@ end
 %################################
 accY = DataSet(:,6);    %ONLY INCLUDE THIS LINE WHEN USING LATERAL DRIFT DATA, because the acceleration in y direction is already given in body frame in the imported data (was not calculated correctly by the professor) 
 %################################
+
+%% Calculating position
 
 % Numerical integration of accX (trapezoidal rule)
 velX = zeros(size(accX,1),1);
