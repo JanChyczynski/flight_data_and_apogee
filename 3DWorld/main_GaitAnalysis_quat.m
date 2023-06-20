@@ -1,3 +1,5 @@
+%authors: Simon Roß, Pablo Vega Perez (except marked parts)
+
 close all
 clear all
 clc

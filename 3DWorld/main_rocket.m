@@ -1,3 +1,5 @@
+%authors: Simon Roß, Pablo Vega Perez (except marked parts)
+
 close all
 clear all
 clc
@@ -69,7 +71,6 @@ mag_Signal = -1;                            %TODO
 %Mag correction
 yaw_mag_cor(1,1)= 0;
 for i=1:size(magX,1)
-    %Yaw = atan2(-ay,ax);
     yaw_mag(i,1) = atan2(-magY(i),magX(i))*180/pi;   %Transformation to degrees
     
     if i==1
@@ -121,7 +122,6 @@ for i=1:size(gyrY,1)
     P_theta_save(:,i:i+1) = P;
 end
 
-close all
 figure('Name','Pitch angle');
 plot(Y_theta_save(1,:)*180/pi)
 hold on;

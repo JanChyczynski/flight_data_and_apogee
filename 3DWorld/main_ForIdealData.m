@@ -1,4 +1,4 @@
-%authors: Simon Roß, Pablo Vega Perez
+%authors: Simon Roß, Pablo Vega Perez (except marked parts)
 
 close all
 clear all
@@ -7,8 +7,8 @@ addpath('Final')
 
 %% PLEASE ADJUST PARAMETERS IN THIS SECTION + Line 221 + weight matrices, P, T_s for Kalman filter
 %Import data; has to be changed according to dataset
-% DataSet = load('..\Data\data.mat');                   %Parabolic fligth
-DataSet = load('..\Data\data_withLateralDrift.mat');    %parabolic fligth with lateral drift (data fpor accY is already in earth frame; it was not calculated correctly by the professor. Therefore, the angles calculated with accY are not 100% correct)
+% DataSet = load('..\Data\data.mat');                   %Parabolic flight
+DataSet = load('..\Data\data_withLateralDrift.mat');    %parabolic flight with lateral drift (data for accY is already in earth frame; it was not calculated correctly by the professor. Therefore, the angles calculated with accY are not 100% correct)
 DataSet = DataSet.data;
 
 samplePeriod = 1/100;
