@@ -18,9 +18,9 @@
 
 #define SER_OUT if (1)
 
-bool real_launch = 0;
+bool real_launch = 1;
 
-Adafruit_BMP280 bmp; // I2C
+Adafruit_BMP280 bmp; // I2C 
 Apogeum_finder height_apogee_finder;
 
 // class default I2C address is 0x68
@@ -109,10 +109,6 @@ void setup() {
     idicate_setup_failure();
   }
 
-  if (!accelgyro.testConnection() && real_launch){
-    idicate_setup_failure();
-  }
-
   SER_OUT Serial.println("     ");
 
 //  Mxyz_init_calibrated();
@@ -179,10 +175,10 @@ void loop() {
   getAccel_Data();
   
   imu_apogee_finder.insert_accelerations(Axyz);
-  float alt = bmp.readAltitude(1013.25); /* Adjusted to local forecast! */
+  float alt = bmp.readAltitude(1014); /* Adjusted to local forecast! */
   height_apogee_finder.insertAltitude(alt);
 
-  if(height_apogee_finder.get_reached_apogeum()) {
+  if(imu_apogee_finder.get_reached_apogee()) {
     servo.write(150);
   }
 
@@ -246,7 +242,7 @@ void print_data_to_file(){
   myFile.print(F(","));
   myFile.print(bmp.readPressure());
   myFile.print(F(","));
-  myFile.print(bmp.readAltitude(1013.25));
+  myFile.print(bmp.readAltitude(1014));
   myFile.print(F(","));
   myFile.println(height_apogee_finder.get_reached_apogeum());
   
