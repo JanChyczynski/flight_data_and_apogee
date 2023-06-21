@@ -5,40 +5,42 @@ clear all
 clc
 addpath('Final')
 
-%% PLEASE ADJUST PARAMETERS IN THIS SECTION + Line 221 + weight matrices, P, T_s for Kalman filter
-%Import data; has to be changed according to dataset
-% DataSet = load('..\Data\data.mat');                   %Parabolic flight
-DataSet = load('..\Data\data_withLateralDrift.mat');    %parabolic flight with lateral drift (data for accY is already in earth frame; it was not calculated correctly by the professor. Therefore, the angles calculated with accY are not 100% correct)
-DataSet = DataSet.data;
+g = 9.81;
 
-samplePeriod = 1/100;
+%% PLEASE ADJUST PARAMETERS IN THIS SECTION + weight matrices, P matrix, T_s for Kalman filter
+%Import data; has to be changed according to dataset
+DataSet = csvread('..\Data\rocket_1.csv');
+DataSet = DataSet(:,2:end);
+startTime = 1.232; 
+stopTime = 99.987; 
 
 %% Process imported data
 
 %extract data from DataSet
-time = DataSet(:,1);    %s
+time = DataSet(:,1)*10^-3;    %ms to s
 gyrX = DataSet(:,2);    %Degrees/s
 gyrY = DataSet(:,3);
 gyrZ = DataSet(:,4);
-accX = DataSet(:,5);    %m/s
+accX = DataSet(:,5);    %g
 accY = DataSet(:,6);
 accZ = DataSet(:,7);
-magX = DataSet(:,8);    %Gauß = e-4 T
+magX = DataSet(:,8);    %microT
 magY = DataSet(:,9);
 magZ = DataSet(:,10);
 
-%% Adding random noise to values (since program works with ideal data!)
-
-snr = 20;
-
-accX = awgn(accX,snr,'measured');
-accY = awgn(accY,snr,'measured');
-accZ = awgn(accZ,snr,'measured');
-
-gyrX = awgn(gyrX,snr,'measured');
-gyrY = awgn(gyrY,snr,'measured');
-gyrZ = awgn(gyrZ,snr,'measured');
-
+%Cut off a bit of start and ending period (source: https://github.com/xioTechnologies/Gait-Tracking-With-x-IMU)
+% time = 0:samplePeriod:time(end,1);
+% indexSel = find(sign(time-startTime)+1, 1) : find(sign(time-stopTime)+1, 1);
+% time = time(indexSel)';
+% gyrX = gyrX(indexSel, :);
+% gyrY = gyrY(indexSel, :);
+% gyrZ = gyrZ(indexSel, :);
+% accX = accX(indexSel, :);
+% accY = accY(indexSel, :);
+% accZ = accZ(indexSel, :);
+% magX = magX(indexSel, :);
+% magY = magY(indexSel, :);
+% magZ = magZ(indexSel, :);
 
 %% Kalman filter parameters
 
@@ -53,12 +55,18 @@ X = 0;
 P = 0;
 
 %% Correction
-%Source: Course "UAV Guidance & Autonomous Control" at UPC ESEIAAT
 
-%Needed for magnetometer correction
+%Transformation from g to m/s
+accX = accX(:,1)*g;
+accY = accY(:,1)*g;
+accZ = accZ(:,1)*g;
+
+
+% Source: Course "UAV Guidance & Autonomous Control" at UPC ESEIAAT
+%Needed for mag correction
 mag_0_Yaw = atan2(-magY(:),magX(:))*180/pi;
 mag_0_Yaw_Mean = mean(mag_0_Yaw);
-mag_Signal = -1;
+mag_Signal = -1;                            %TODO
 
 %Mag correction
 yaw_mag_cor(1,1)= 0;
@@ -91,8 +99,8 @@ Y_theta_save = zeros(1,size(gyrY,1));
 P_theta_save = zeros(2,size(gyrY,1)*2);
 
 R_pitch = 1;
-Q_pitch = [0.001 0;
-           0 0.001]; %starting with identity and then trial and error to find the best values for the diagonal matrix
+Q_pitch = [100 0;
+           0 100]; %starting with identity and then trial and error to find the best values for the diagonal matrix
 
 for i=1:size(gyrY,1)
     y = atan(-accX(i)/sqrt(accY(i)^2+accZ(i)^2));
@@ -102,7 +110,7 @@ for i=1:size(gyrY,1)
         X0 = [0; 
               0];
         P0 = [5 0; 
-              0 5]; %trial and error
+              0 5];         %trial and error
         [X, P] = KalmanFilter(A, B, C, u, y, X0, P0, Q_pitch, R_pitch);
     else
         
@@ -111,13 +119,14 @@ for i=1:size(gyrY,1)
     
     X_theta_save(:,i) = X; 
     Y_theta_save(1,i) = y;
-    P_theta_save(:,i:i+1) = P; 
+    P_theta_save(:,i:i+1) = P;
 end
 
 figure('Name','Pitch angle');
 plot(Y_theta_save(1,:)*180/pi)
-hold
+hold on;
 plot(X_theta_save(1,:)*180/pi)
+hold off;
 ylabel('[Degrees]')
 legend('Theta_m_e_a_s_u_r_e_d','Theta_e_s_t_i_m_a_t_e_d');
 
@@ -137,7 +146,7 @@ for i=1:size(gyrX,1)
         X0 = [0; 
               0];
         P0 = [5 0; 
-              0 5]; %trial and error
+              0 5];         %trial and error
         [X, P] = KalmanFilter(A, B, C, u, y, X0, P0, Q_roll, R_roll);
     else
         
@@ -151,8 +160,9 @@ end
 
 figure('Name','Roll angle');
 plot(Y_phi_save(1,:)*180/pi)
-hold
+hold on;
 plot(X_phi_save(1,:)*180/pi)
+hold off;
 ylabel('[Degrees]')
 legend('Phi_m_e_a_s_u_r_e_d','Phi_e_s_t_i_m_a_t_e_d');
 
@@ -174,7 +184,7 @@ for i=1:size(magX,1)
         X0 = [0; 
               0];
         P0 = [1 0; 
-              0 1]; %trial and error
+              0 1];                 %trial and error
         [X, P] = KalmanFilter(A, B, C, u, y, X0, P0, Q_yaw, R_yaw);
     else
         
@@ -187,17 +197,19 @@ for i=1:size(magX,1)
 end
 
 figure('Name','Yaw angle');
-plot(Y_yaw_save(1,:))       %yaw is already in Degrees!
-hold
+plot(Y_yaw_save(1,:))           %yaw is already in Degrees!
+hold on;
 plot(X_yaw_save(1,:))
+hold off;
 ylabel('[Degrees]')
 legend('Psi_m_e_a_s_u_r_e_d','Psi_e_s_t_i_m_a_t_e_d');
 
 %% Derivatives
 figure('Name','Derivatives Phi and Theta');
 plot(X_phi_save(2,:))
-hold
+hold on;
 plot(X_theta_save(2,:))
+hold off;
 legend('Phi_d_o_t','Theta_d_o_t');
 ylabel('[rad/s]')
 
@@ -217,53 +229,49 @@ for i=1:size(accX,1)
     accZ(i,1) = acc_transf(3,1);
 end
 
-%################################
-accY = DataSet(:,6);    %ONLY INCLUDE THIS LINE WHEN USING LATERAL DRIFT DATA, because the acceleration in y direction is already given in body frame in the imported data (was not calculated correctly by the professor) 
-%################################
-
 %% Calculating position
 
 % Numerical integration of accX (trapezoidal rule)
 velX = zeros(size(accX,1),1);
-velX(1,1) = 50*cos(pi/4);                           %INITIAL SPEED
+velX(1,1) = 0;                          %initial speed
 for i=2:size(accX,1)
-    velX(i,1) = velX(i-1,1) + ((accX(i,1)-accX(i-1,1))/2+accX(i-1,1))*samplePeriod;
+    velX(i,1) = velX(i-1,1) + ((accX(i,1)-accX(i-1,1))/2+accX(i-1,1))*(time(i,1)-time(i-1,1));
 end
 
 posX = zeros(size(accX,1),1);
 posX(1,1) = 0;
 for i=2:size(accX,1)
-    posX(i,1) = posX(i-1,1) + ((velX(i,1)-velX(i-1,1))/2+velX(i-1,1))*samplePeriod;
+    posX(i,1) = posX(i-1,1) + ((velX(i,1)-velX(i-1,1))/2+velX(i-1,1))*(time(i,1)-time(i-1,1));
 end
 
 % Numerical integration of accY (trapezoidal rule)
 velY = zeros(size(accY,1),1);
 velY(1,1) = 0;
 for i=2:size(accY,1)
-    velY(i,1) = velY(i-1,1) + ((accY(i,1)-accY(i-1,1))/2+accY(i-1,1))*samplePeriod;
+    velY(i,1) = velY(i-1,1) + ((accY(i,1)-accY(i-1,1))/2+accY(i-1,1))*(time(i,1)-time(i-1,1));
 end
 
 posY = zeros(size(accY,1),1);
-posY(1,1) = 0;
+posY(1,1) = 0;                          %initial speed
 for i=2:size(accY,1)
-    posY(i,1) = posY(i-1,1) + ((velY(i,1)-velY(i-1,1))/2+velY(i-1,1))*samplePeriod;
+    posY(i,1) = posY(i-1,1) + ((velY(i,1)-velY(i-1,1))/2+velY(i-1,1))*(time(i,1)-time(i-1,1));
 end
 
-% Numerical integration of accZ (trapezoidal rule)
+%Numerical integration of accZ (trapezoidal rule)
 velZ = zeros(size(accZ,1),1);
-velZ(1,1) = 50*sin(pi/4);                           %INITIAL SPEED
+velZ(1,1) = 0;                          %initial speed
 for i=2:size(accZ,1)
-    velZ(i,1) = velZ(i-1,1) + ((accZ(i,1)-accZ(i-1,1))/2+accZ(i-1,1))*samplePeriod;
+    velZ(i,1) = velZ(i-1,1) + ((accZ(i,1)-accZ(i-1,1))/2+accZ(i-1,1))*(time(i,1)-time(i-1,1));
 end
 
 posZ = zeros(size(accZ,1),1);
 posZ(1,1) = 0;
 for i=2:size(accZ,1)
-    posZ(i,1) = posZ(i-1,1) + ((velZ(i,1)-velZ(i-1,1))/2+velZ(i-1,1))*samplePeriod;
+    posZ(i,1) = posZ(i-1,1) + ((velZ(i,1)-velZ(i-1,1))/2+velZ(i-1,1))*(time(i,1)-time(i-1,1));
 end
 
 
-% Plot position in 3D
+%Plot position in 3D
 figure('Name','Position 3D')
 plot3(posX,posY,posZ)
 legend('XYZ')
@@ -271,7 +279,7 @@ xlabel('x')
 ylabel('y')
 zlabel('z')
 
-% Plot X, Y, Z position separately over time
+%Plot X, Y, Z position separately over time
 figure('Name','Position')
 subplot(3,1,1)
 plot(time, posX)
@@ -286,7 +294,7 @@ plot(time, posZ)
 xlabel('time [s]')
 ylabel('Z [m]')
 
-% Plot velocities over time
+%Plot velocities over time
 figure('Name','Velocity')
 hold on;
 plot(time, velX)
@@ -302,8 +310,7 @@ pitch = pitch-pi/4;     %Correction needed for the animation
 yaw = (X_yaw_save(1,:)*pi/180)'; %Transformation to radian
 
 saveVar = [time posX posY posZ pitch yaw roll];
-
-% Call function to show animation of the calculated trajectory
+% Call function to plot the measured / calculated trajectory
 plotTrajectory(saveVar);
 
 

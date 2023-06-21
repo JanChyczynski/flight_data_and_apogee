@@ -1,4 +1,4 @@
-%
+% Source: http://www.wbint.pl/flypath3d/
 % FLYPATH (flypath.m)
 %
 % Displays static and animated trajectories of missiles and air targets
